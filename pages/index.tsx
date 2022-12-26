@@ -3,22 +3,35 @@ import Image from 'next/image'
 import { Inter } from '@next/font/google'
 import styles from '../styles/Home.module.css'
 import { useEffect, useState } from 'react'
+import { setDefaultResultOrder } from 'dns'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const getHello = async ()=>  {
-  const helloRes = await fetch('api/hello').then((response) => response.json())
-  return helloRes
-}
-
 export default function Home() {
-  const [name, setName] = useState('');
+  const [data, setData] = useState<any>();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<any>(null);
 
-  //this doesn't work because useEffect is not async
-  useEffect(() => {
-    getHello().then(data => setName(data))
+   useEffect(() => {
+    fetch('api/hello')
+    .then(response => {
+      if(response.ok) {
+        return response.json()
+      }
+      throw response
+    })
+    .then(data => setData(data))
+    .catch(error => {
+      console.error("error fetching name", error)
+      setError(error);
+    })
+    .finally(() => { 
+      setLoading(false)
+    })
   }, [])
 
+  if(loading) return "Loading..."
+  if(error) return "error..."
 
   return (
     <>
@@ -29,7 +42,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className={styles.main}>
-        <div>{name}</div>
+        <div>{data.name}</div>
       </main>
     </>
   )
